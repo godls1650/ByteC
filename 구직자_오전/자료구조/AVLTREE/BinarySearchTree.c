@@ -1,67 +1,6 @@
 #include "BinarySearchTree.h"
 
 
-btnode* makeBTnode(void){  
-	btnode* temp = (btnode*)malloc(sizeof(btnode));
-	temp->Left = temp->Right = NULL;
-	temp->data = 0;
-	return temp;
-}
-int getData(btnode* bt){return bt->data;}
-void setData(btnode* bt, int value){ bt->data = value; }
-btnode* getLeftSubTree(btnode* bt){  bt->Left;}
-btnode* getRightSubTree(btnode* bt){ bt->Right;}
-
-void MakeLeftSubTree(btnode* _Origin, btnode* sub){ 
-	if (_Origin->Left != NULL)
-		free(_Origin->Left);
-	_Origin->Left = sub;
-}
-
-void MakeRightSubTree(btnode* _Origin, btnode* sub) {
-	if (_Origin->Right != NULL)
-		free(_Origin->Right);
-	_Origin->Right = sub;
-}
-
-void PreorderTraverse(btnode* bt, VisitFuncName act){  
-	if (bt == NULL) return;
-	act(bt->data);
-	act(bt->Left, act);
-	act(bt->Right, act);
-}
-void InorderTraverse(btnode* bt, VisitFuncName act) {
-	if (bt == NULL) return;
-	act(bt->Left, act);
-	act(bt->data);
-	act(bt->Right, act);
-}
-void PostorderTraverse(btnode* bt, VisitFuncName act) {
-	if (bt == NULL) return;
-	act(bt->Left, act);
-	act(bt->Right, act);
-	act(bt->data);
-}
-
-btnode* removeLeftSubTree(btnode* bt){
-	btnode* delnode = NULL;
-	if (bt != NULL) {
-		delnode = bt->Left;
-		bt->Left = NULL;
-	}
-	return delnode;
-}
-btnode* removeRightSubTree(btnode* bt) {
-	btnode* delnode = NULL;
-	if (bt != NULL) {
-		delnode = bt->Right;
-		bt->Right = NULL;
-	}
-	return delnode;
-}
-void changeLeftSubTree(btnode* _Origin, btnode* sub){_Origin->Left = sub;}
-void changeRightSubTree(btnode* _Origin, btnode* sub){ _Origin->Right = sub;}
-
 void BSTMakeAndInit(btnode** pRoot) { *pRoot = NULL;  }
 int BSTGetNodeData(btnode* bst) { return getData(bst); }
 void BSTInsert(btnode** pRoot, int data) {
@@ -70,7 +9,7 @@ void BSTInsert(btnode** pRoot, int data) {
 	btnode* nNode = NULL; //  newNode
 
 	while (cNode != NULL) {
-		if (data == GetData(cNode))
+		if (data == getData(cNode))
 			return; // 키값 중복
 		pNode = cNode; // 부모노드 = cNode의 현재 값
 		if (getData(cNode) > data)
@@ -88,12 +27,14 @@ void BSTInsert(btnode** pRoot, int data) {
 	else {
 		*pRoot = nNode;
 	}
+
+	Rebalance(pRoot);
 }
 btnode* BSTSearch(btnode* bst, int target) {
 	btnode* cNode = bst;
 	int cd = 0;
 	while (cNode != NULL) {
-		cd = GetData(cNode);
+		cd = getData(cNode);
 		if (target == cd)		return cNode;
 		else if (target < cd)	cNode = getLeftSubTree(cNode);
 		else					cNode = getRightSubTree(cNode);
@@ -141,20 +82,22 @@ btnode* BSTRemove(btnode** pRoot, int target) {
 			mNode = getLeftSubTree(mNode);
 		}
 
-		delData = GetData(dNode);
+		delData = getData(dNode);
 		setData(dNode, getData(mNode));
 
 		if (getLeftSubTree(mpNode) == mNode) changeLeftSubTree(mpNode, getRightSubTree(mNode));
 		else changeRightSubTree(mpNode, getRightSubTree(mNode));
 
 		dNode = mNode;
-		SetData(dNode, delData);
+		setData(dNode, delData);
 	
 	}
 	if (getRightSubTree(pVRoot) != *pRoot)
 		*pRoot = getRightSubTree(pVRoot);
 
 	free(pVRoot);
+
+	Rebalance(pRoot);
 	return dNode;
 }
 void PrintForm(int data) {
