@@ -28,3 +28,8 @@ btnode* removeRightSubTree(btnode* bt);
 void changeLeftSubTree(btnode* _Origin, btnode* sub);
 void changeRightSubTree(btnode* _Origin, btnode* sub);
 
+void BSTMakeAndInit(btnode** pRoot);
+int BSTGetNodeData(btnode* bst);
+void BSTInsert(btnode** pRoot, int data);
+btnode* BSTSearch(btnode* bst, int target);
+btnode* BSTRemove(btnode** pRoot, int target);
