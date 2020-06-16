@@ -1,8 +1,9 @@
-﻿// api0615_MsgEx.cpp : 애플리케이션에 대한 진입점을 정의합니다.
+﻿// api_0615_Menu.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
 
 #include "framework.h"
-#include "api0615_MsgEx.h"
+#include "myFileIO.h"
+#include "api_0615_Menu.h"
 
 #define MAX_LOADSTRING 100
 
@@ -29,7 +30,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_API0615MSGEX, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_API0615MENU, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // 애플리케이션 초기화를 수행합니다:
@@ -38,7 +39,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_API0615MSGEX));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_API0615MENU));
 
     MSG msg;
 
@@ -73,10 +74,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_API0615MSGEX));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_API0615MENU));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_API0615MSGEX);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_API0615MENU);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -123,27 +124,46 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static int x;
-    static int y;
-    static int w;
-    static int h;
-    static bool flag;
-    static int index;
+    OPENFILENAME OFN;
+    TCHAR str[100], lpstrFile[100] = _T("");
+    TCHAR filter[] = _T("모든파일\0 *.*\0Text File(*.txt, *.dat)\0*.txt;*.dat; *doc\0");
+    
     
     switch (message)
     {
-    case WM_CREATE :
-        x = 50; y = 100;
-        w = 50; h = 70;
-        flag = false;
-        index = 0;
-        break;
+
     case WM_COMMAND:
-        {
+        {   
+            
             int wmId = LOWORD(wParam);
+            int n_mboxResult = 0;
+            
             // 메뉴 선택을 구문 분석합니다:
             switch (wmId)
             {
+            case IDM_OPEN :
+                memset(&OFN, 0, sizeof(OPENFILENAME));
+                OFN.lStructSize = sizeof(OPENFILENAME);
+                OFN.hwndOwner = hWnd;
+                OFN.lpstrFilter = filter;
+                OFN.lpstrFile = lpstrFile;
+                OFN.nMaxFile = 100; // 파일이름 100글자
+                OFN.lpstrInitialDir = _T("C:\\");
+                if (GetOpenFileName(&OFN) != 0) {
+                    _stprintf_s(str, _T("%s 파일을 열겠습니까?"), OFN.lpstrFile);
+                    n_mboxResult = MessageBox(hWnd, str, _T("파일 열기"), MB_OKCANCEL);
+                    if (n_mboxResult == IDOK) {
+                        OutFromFile(OFN.lpstrFile, hWnd);
+                    }
+                    else if (n_mboxResult == IDCANCEL) {
+                        break;
+                    }
+                    
+                    
+                }
+                break;
+
+             
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -155,50 +175,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-    case WM_KEYDOWN :
-        if (wParam == VK_LEFT)          { index = 0; }
-        else if (wParam == VK_RIGHT)    { index = 2; }
-        else if (wParam == VK_UP)       { index = 1; }
-        else if (wParam == VK_DOWN)     { index = 3; }
-        else { break;}
-        flag = true;
-        InvalidateRgn(hWnd, NULL, TRUE);
-        break;
-    case WM_KEYUP :
-        flag = false;
-        InvalidateRgn(hWnd, NULL, TRUE);
-        break;
     case WM_PAINT:
         {
-            HBRUSH hbrush, oldbrush;
-             WCHAR text[4][20] = { _T("왼쪽"), _T("위쪽"), _T("오른쪽"),_T("아래쪽") };
-            RECT textbox[4] = { {x, y + h, x + w, y + 2 * h},                    /*LEFT*/
-                                    {x + w, y, x + 2 * w, y + h},                   /*UP  */
-                                    {x + 2 * w, y + h, x + 3 * w, y + 2 * h},       /*RIGHT*/
-                                    {x + w, y + 2 * h, x + 2 * w, y + 3 * h} };     /*DOWN*/
-      
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            int  sx, sy, ex, ey;
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-          Rectangle(hdc, x        , y+h       , x+w       , y +2*h    );/*LEFT*/
-          Rectangle(hdc, x +w     , y         , x + 2*w   , y + h     );/*UP  */
-          Rectangle(hdc, x + 2*w  , y + h     , x + 3*w   , y + 2*h   );/*RIGHT*/
-          Rectangle(hdc, x + w    , y + 2*h   , x + 2*w   , y + 3*h   );/*DOWN*/
-            for (int i = 0; i < 4; i++) {
-                DrawText(hdc, text[i], _tcslen(text[i]), &textbox[i], DT_SINGLELINE| DT_CENTER | DT_VCENTER);
-            }
-            if (flag == true) {
-                
-                hbrush = CreateSolidBrush(RGB(255, 0, 0));
-                oldbrush = (HBRUSH)SelectObject(hdc, hbrush);
-                sx = textbox[index].left; sy = textbox[index].top;
-                ex = textbox[index].right; ey = textbox[index].bottom;
-                Rectangle(hdc, sx, sy, ex, ey);
-                SelectObject(hdc, oldbrush);
-                DeleteObject(hbrush);
-            
-            }
             EndPaint(hWnd, &ps);
         }
         break;
@@ -206,7 +187,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return DefWindowProc(hWnd, message, wParam, lParam);  
     }
     return 0;
 }
